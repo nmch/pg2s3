@@ -40,10 +40,17 @@ execute_backup(){
 }
 
 if [ "${PGDATABASE}" = "**None**" ]; then
+  if [ "${ON_EXECUTE_DISCONNECT}" = "force" ]; then
+    psql -c "select pg_terminate_backend(pid) from pg_stat_activity where pid <> pg_backend_pid() and usename = '${PGUSER}'"
+    export ON_EXECUTE_DISCONNECT="**None**"
+  fi
   DATABASES=$(psql -qAt -c 'select datname from pg_database where datallowconn' template1)
   for DBNAME in ${DATABASES}; do
     execute_backup "${DBNAME}"
   done
 else
+  if [ "${ON_EXECUTE_DISCONNECT}" = "force" ]; then
+    psql -c "select pg_terminate_backend(pid) from pg_stat_activity where pid <> pg_backend_pid() and usename = '${PGUSER}' and datname = '${PGDATABASE}'"
+  fi
   execute_backup "${PGDATABASE}"
 fi
