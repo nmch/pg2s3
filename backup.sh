@@ -2,14 +2,14 @@
 set -e -o pipefail
 
 execute_backup(){
-  if [[ ${DBNAME} == "template1" ] || [ ${DBNAME} == "postgres" ] || [ ${DBNAME} == "rdsadmin" ]]; then
-    return
-  fi
-
   DBNAME=$1
   if [[ ${DBNAME} == "" ]]; then
     echo "empty database name"
     exit 1
+  fi
+
+  if [[ ${DBNAME} == "template1"  || ${DBNAME} == "postgres" || ${DBNAME} == "rdsadmin" ]]; then
+    return
   fi
 
   DUMP_FILENAME="${DBNAME}.custom.dump"
@@ -39,9 +39,9 @@ execute_backup(){
   echo " finished at ${CURRENT_DATE}"
 }
 
-if [[ "${PGDATABASE}" == "**None**" ]]; then
+if [[ ${PGDATABASE} == "**None**" ]]; then
   if [[ ${ON_EXECUTE_DISCONNECT} == "force" ]]; then
-    psql -c "select pg_terminate_backend(pid) from pg_stat_activity where pid <> pg_backend_pid() and usename = '${PGUSER}'"
+    psql -c "select pg_terminate_backend(pid) from pg_stat_activity where pid <> pg_backend_pid() and usename = '${PGUSER}'" template1
   fi
   DATABASES=$(psql -qAt -c 'select datname from pg_database where datallowconn' template1)
   for DBNAME in ${DATABASES}; do
@@ -49,7 +49,7 @@ if [[ "${PGDATABASE}" == "**None**" ]]; then
   done
 else
   if [[ ${ON_EXECUTE_DISCONNECT} == "force" ]]; then
-    psql -c "select pg_terminate_backend(pid) from pg_stat_activity where pid <> pg_backend_pid() and usename = '${PGUSER}' and datname = '${PGDATABASE}'"
+    psql -c "select pg_terminate_backend(pid) from pg_stat_activity where pid <> pg_backend_pid() and usename = '${PGUSER}' and datname = '${PGDATABASE}'" template1
   fi
   execute_backup "${PGDATABASE}"
 fi
