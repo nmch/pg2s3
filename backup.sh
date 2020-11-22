@@ -1,13 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 set -e -o pipefail
 
 execute_backup(){
-  if [ "${DBNAME}" = "template1" ] || [ "${DBNAME}" = "postgres" ] || [ "${DBNAME}" = "rdsadmin" ]; then
+  if [[ ${DBNAME} == "template1" ] || [ ${DBNAME} == "postgres" ] || [ ${DBNAME} == "rdsadmin" ]]; then
     return
   fi
 
   DBNAME=$1
-  if [ "${DBNAME}" = "" ]; then
+  if [[ ${DBNAME} == "" ]]; then
     echo "empty database name"
     exit 1
   fi
@@ -30,7 +30,7 @@ execute_backup(){
   echo "MD5: ${MD5}"
   echo ${MD5} > ${DUMP_FILEPATH}.md5
 
-  if [ "${S3_PATH}" != "**None**" ]; then
+  if [[ ${S3_PATH} != "**None**" ]]; then
     aws s3 cp --no-progress "${DUMP_FILEPATH}" "${S3_PATH}"
     aws s3 cp --no-progress "${DUMP_FILEPATH}.md5" "${S3_PATH}"
   fi
@@ -39,17 +39,16 @@ execute_backup(){
   echo " finished at ${CURRENT_DATE}"
 }
 
-if [ "${PGDATABASE}" = "**None**" ]; then
-  if [ "${ON_EXECUTE_DISCONNECT}" = "force" ]; then
+if [[ "${PGDATABASE}" == "**None**" ]]; then
+  if [[ ${ON_EXECUTE_DISCONNECT} == "force" ]]; then
     psql -c "select pg_terminate_backend(pid) from pg_stat_activity where pid <> pg_backend_pid() and usename = '${PGUSER}'"
-    export ON_EXECUTE_DISCONNECT="**None**"
   fi
   DATABASES=$(psql -qAt -c 'select datname from pg_database where datallowconn' template1)
   for DBNAME in ${DATABASES}; do
     execute_backup "${DBNAME}"
   done
 else
-  if [ "${ON_EXECUTE_DISCONNECT}" = "force" ]; then
+  if [[ ${ON_EXECUTE_DISCONNECT} == "force" ]]; then
     psql -c "select pg_terminate_backend(pid) from pg_stat_activity where pid <> pg_backend_pid() and usename = '${PGUSER}' and datname = '${PGDATABASE}'"
   fi
   execute_backup "${PGDATABASE}"
