@@ -45,7 +45,7 @@ execute_backup(){
     DUMP_FILENAME=${DUMP_FILENAME_LIST[$i]}
     DUMP_FILEPATH="${DUMP_DIR}/${DUMP_FILENAME}"
     MD5_FILEPATH="${DUMP_FILEPATH}.md5"
-    echo "DUMP FILE({$i}): ${DUMP_FILEPATH}"
+    echo "DUMP FILE(${i}): ${DUMP_FILEPATH}"
 
     cp ${TMP_DUMP_FILEPATH} ${DUMP_FILEPATH}
     echo ${MD5} > ${MD5_FILEPATH}
