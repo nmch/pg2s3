@@ -18,22 +18,45 @@ execute_backup(){
   echo "Backup ${DBNAME} started at ${CURRENT_DATE}"
 
   mkdir -p ${DUMP_DIR}
-  DUMP_FILEPATH="${DUMP_DIR}/${DUMP_FILENAME}"
   TMP_DUMP_FILEPATH="${DUMP_DIR}/dump.tmp"
 
-  pg_dump -Fc -f "${TMP_DUMP_FILEPATH}" "${DBNAME}" || exit $?
-  mv "${TMP_DUMP_FILEPATH}" "${DUMP_FILEPATH}"
+  DUMP_FILENAME_LIST=("${DBNAME}.custom.dump")
 
-  echo "${DBNAME} dumped to ${DUMP_FILEPATH}"
-  ls -la "${DUMP_FILEPATH}"
-  MD5=$(md5sum "${DUMP_FILEPATH}")
-  echo "MD5: ${MD5}"
-  echo ${MD5} > ${DUMP_FILEPATH}.md5
+  if [[ ${HISTORY} == "HDM" ]]; then
+    HOUR=`date +%H`
+    DATE=`date +%d`
+    MONTH=`date +%m`
 
-  if [[ ${S3_PATH} != "**None**" ]]; then
-    aws s3 cp --no-progress "${DUMP_FILEPATH}" "${S3_PATH}"
-    aws s3 cp --no-progress "${DUMP_FILEPATH}.md5" "${S3_PATH}"
+    DUMP_FILENAME_LIST+=("${DBNAME}.h${HOUR}.custom.dump")
+    DUMP_FILENAME_LIST+=("${DBNAME}.d${DATE}.custom.dump")
+    DUMP_FILENAME_LIST+=("${DBNAME}.m${MONTH}.custom.dump")
+  elif [[ ${HISTORY} == "SEQ" ]]; then
+    SEQ=`date +%Y%m%d%H%M%S`
+    DUMP_FILENAME_LIST+=("${DBNAME}.${SEQ}.custom.dump")
   fi
+
+  pg_dump -Fc -f ${TMP_DUMP_FILEPATH} ${DBNAME} || exit $?
+  ls -la ${TMP_DUMP_FILEPATH}
+  MD5=$(md5sum "${TMP_DUMP_FILEPATH}")
+  echo "MD5: ${MD5}"
+
+  for i in ${!DUMP_FILENAME_LIST[@]}
+  do
+    DUMP_FILENAME=${DUMP_FILENAME_LIST[$i]}
+    DUMP_FILEPATH="${DUMP_DIR}/${DUMP_FILENAME}"
+    MD5_FILEPATH="${DUMP_FILEPATH}.md5"
+    echo "DUMP FILE({$i}): ${DUMP_FILEPATH}"
+
+    cp ${TMP_DUMP_FILEPATH} ${DUMP_FILEPATH}
+    echo ${MD5} > ${MD5_FILEPATH}
+
+    if [[ ${S3_PATH} != "**None**" ]]; then
+      aws s3 cp --no-progress "${DUMP_FILEPATH}" "${S3_PATH}"
+      aws s3 cp --no-progress "${DUMP_FILEPATH}.md5" "${S3_PATH}"
+    fi
+  done
+
+  rm "${TMP_DUMP_FILEPATH}"
 
   CURRENT_DATE="$(date)";
   echo " finished at ${CURRENT_DATE}"
