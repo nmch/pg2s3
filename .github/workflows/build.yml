@@ -10,6 +10,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { tag: "latest", version: "15" }
+          - { tag: "15", version: "15" }
+          - { tag: "13", version: "13" }
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -26,6 +32,7 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: nmch/pg2s3:latest
+          tags: nmch/pg2s3:${{ matrix.tag }}
+          build-args: POSTGRES_VERSION=${{ matrix.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

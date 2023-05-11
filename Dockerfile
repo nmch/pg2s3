@@ -1,7 +1,9 @@
 FROM alpine:3
 
+ARG POSTGRES_VERSION="15"
+
 RUN apk update \
- && apk add bash py3-pip curl postgresql \
+ && apk add bash py3-pip curl postgresql${POSTGRES_VERSION}-client \
  && pip install --upgrade pip awscli \
  && curl -L --insecure https://github.com/odise/go-cron/releases/download/v0.0.6/go-cron-linux.gz | zcat > /usr/local/bin/go-cron \
  && chmod u+x /usr/local/bin/go-cron \
