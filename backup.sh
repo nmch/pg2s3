@@ -53,6 +53,11 @@ execute_backup(){
     if [[ ${S3_PATH} != "**None**" ]]; then
       aws s3 cp --no-progress "${DUMP_FILEPATH}" "${S3_PATH}"
       aws s3 cp --no-progress "${DUMP_FILEPATH}.md5" "${S3_PATH}"
+
+      if [[ ${MOVE_TO_S3} == "1" ]]; then
+        rm ${DUMP_FILEPATH}
+        rm ${MD5_FILEPATH}
+      fi
     fi
   done
 
