@@ -32,8 +32,8 @@ jobs:
           file: Dockerfile
           push: true
           tags: nmch/pg2s3:${{ matrix.tag }}
-          build-args:
-            - REPO_VERSION=${{ matrix.repo }}
-            - POSTGRES_VERSION=${{ matrix.version }}
+          build-args: |
+            REPO_VERSION=${{ matrix.repo }}
+            POSTGRES_VERSION=${{ matrix.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
