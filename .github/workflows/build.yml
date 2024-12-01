@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - { tag: "latest", version: "16", repo: "edge" }
+          - { tag: "latest", version: "17", repo: "edge" }
           - { tag: "15", version: "15", repo: "edge" }
           - { tag: "13", version: "13", repo: "v3.16" }
     steps:
