@@ -1,7 +1,7 @@
 FROM alpine:3
 
 ARG REPO_VERSION="edge"
-ARG POSTGRES_VERSION="16"
+ARG POSTGRES_VERSION="17"
 
 RUN apk update \
  && apk add --repository https://dl-cdn.alpinelinux.org/alpine/${REPO_VERSION}/main bash py3-pip aws-cli curl postgresql${POSTGRES_VERSION}-client \
