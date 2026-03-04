@@ -9,16 +9,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         include:
-          - { tag: "latest", version: "17", repo: "edge" }
+          - { tag: "latest", version: "18", repo: "edge" }
+          - { tag: "17", version: "17", repo: "edge" }
           - { tag: "16", version: "16", repo: "edge" }
           - { tag: "15", version: "15", repo: "edge" }
           - { tag: "13", version: "13", repo: "v3.16" }
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Docker Builder
         uses: docker/setup-buildx-action@v3
       - name: Log into Docker Hub
@@ -26,7 +31,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: build container image
+      - name: build container image (PostgreSQL ${{ matrix.version }})
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -38,3 +43,4 @@ jobs:
             POSTGRES_VERSION=${{ matrix.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: false
