@@ -63,6 +63,38 @@ execute_backup(){
 
   rm "${TMP_DUMP_FILEPATH}"
 
+  if [[ ${SCHEMA_DUMP} == "1" ]]; then
+    TMP_SCHEMA_FILEPATH="${DUMP_DIR}/schema.tmp"
+    pg_dump -s -f ${TMP_SCHEMA_FILEPATH} ${DBNAME} || exit $?
+    ls -la ${TMP_SCHEMA_FILEPATH}
+    SCHEMA_MD5=$(md5sum "${TMP_SCHEMA_FILEPATH}")
+    echo "Schema MD5: ${SCHEMA_MD5}"
+
+    for i in ${!DUMP_FILENAME_LIST[@]}
+    do
+      DUMP_FILENAME=${DUMP_FILENAME_LIST[$i]}
+      SCHEMA_FILENAME="${DUMP_FILENAME%.custom.dump}.schema.sql"
+      SCHEMA_FILEPATH="${DUMP_DIR}/${SCHEMA_FILENAME}"
+      SCHEMA_MD5_FILEPATH="${SCHEMA_FILEPATH}.md5"
+      echo "SCHEMA FILE(${i}): ${SCHEMA_FILEPATH}"
+
+      cp ${TMP_SCHEMA_FILEPATH} ${SCHEMA_FILEPATH}
+      echo ${SCHEMA_MD5} > ${SCHEMA_MD5_FILEPATH}
+
+      if [[ ${S3_PATH} != "**None**" ]]; then
+        aws s3 cp --no-progress "${SCHEMA_FILEPATH}" "${S3_PATH}"
+        aws s3 cp --no-progress "${SCHEMA_MD5_FILEPATH}" "${S3_PATH}"
+
+        if [[ ${MOVE_TO_S3} == "1" ]]; then
+          rm ${SCHEMA_FILEPATH}
+          rm ${SCHEMA_MD5_FILEPATH}
+        fi
+      fi
+    done
+
+    rm "${TMP_SCHEMA_FILEPATH}"
+  fi
+
   CURRENT_DATE="$(date)";
   echo " finished at ${CURRENT_DATE}"
 }
