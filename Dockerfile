@@ -21,6 +21,7 @@ ENV AWS_ACCESS_KEY_ID ""
 ENV AWS_SECRET_ACCESS_KEY ""
 ENV AWS_DEFAULT_REGION "ap-northeast-1"
 ENV DUMP_DIR "/dump"
+ENV SCHEMA_DUMP "0"
 
 ADD run.sh /app/run.sh
 ADD backup.sh /app/backup.sh
